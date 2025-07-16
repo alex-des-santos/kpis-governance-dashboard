@@ -1,5 +1,7 @@
 # Documento PDF Consolidado - Proposta de Governança de Dados e KPIs
 
+> **🔗 [Repositório do Projeto](https://github.com/alex-des-santos/kpis-governance-dashboard)** | **📊 [Dashboard Demonstrativo](https://alex-des-santos.github.io/kpis-governance-dashboard/)** | **🏠 [Portfólio](https://alexsantos.pro/)**
+
 ## 📋 Índice
 
 1. [Resumo Executivo](#resumo-executivo)
@@ -359,6 +361,8 @@
 ```
 
 ### 4.2 Funcionalidades Interativas
+
+**🔗 [Visualizar Dashboard Demonstrativo](https://alex-des-santos.github.io/kpis-governance-dashboard/)**
 
 **Drill-down**: Clique em qualquer KPI para detalhamento
 **Filtros Dinâmicos**: Atualizações em tempo real
@@ -988,3 +992,9 @@ A implementação desta solução posicionará a empresa como líder em seu seto
 **Autor**: Alexandre Santos  
 **Data**: 16 de julho de 2025  
 **Versão**: 1.0
+
+## 🔗 Links Relevantes
+
+- **🏠 Portfólio**: [alexsantos.pro](https://alexsantos.pro/)
+- **📊 Dashboard Demonstrativo**: [alex-des-santos.github.io/kpis-governance-dashboard](https://alex-des-santos.github.io/kpis-governance-dashboard/)
+- **📂 Repositório do Projeto**: [github.com/alex-des-santos/kpis-governance-dashboard](https://github.com/alex-des-santos/kpis-governance-dashboard)
