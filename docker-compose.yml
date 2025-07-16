@@ -1,0 +1,256 @@
+# Docker Compose para Ambiente de Desenvolvimento
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  # PostgreSQL para metadata do Airflow
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - data-network
+
+  # Redis para Celery
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - data-network
+
+  # Airbyte Server
+  airbyte-server:
+    image: airbyte/server:latest
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://airbyte:airbyte@airbyte-db:5432/airbyte
+      - AIRBYTE_VERSION=dev
+      - AIRBYTE_ROLE=server
+      - TRACKING_STRATEGY=segment
+      - WEBAPP_URL=http://airbyte-webapp:80
+      - WORKER_ENVIRONMENT=docker
+      - WORKSPACE_ROOT=/tmp/workspace
+      - WORKSPACE_DOCKER_MOUNT=airbyte_workspace
+      - LOCAL_ROOT=/tmp/airbyte_local
+      - LOCAL_DOCKER_MOUNT=airbyte_local
+      - CONFIG_ROOT=/data
+      - CONFIG_DOCKER_MOUNT=airbyte_config
+      - INTERNAL_API_HOST=airbyte-server:8001
+    depends_on:
+      - airbyte-db
+    volumes:
+      - airbyte_workspace:/tmp/workspace
+      - airbyte_local:/tmp/airbyte_local
+      - airbyte_config:/data
+    networks:
+      - data-network
+
+  # Airbyte Database
+  airbyte-db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_USER=airbyte
+      - POSTGRES_PASSWORD=airbyte
+      - POSTGRES_DB=airbyte
+    volumes:
+      - airbyte_db_data:/var/lib/postgresql/data
+    networks:
+      - data-network
+
+  # Airbyte Webapp
+  airbyte-webapp:
+    image: airbyte/webapp:latest
+    ports:
+      - "8000:80"
+    environment:
+      - AIRBYTE_VERSION=dev
+      - API_URL=http://airbyte-server:8001/api/v1/
+      - INTERNAL_API_HOST=airbyte-server:8001
+    depends_on:
+      - airbyte-server
+    networks:
+      - data-network
+
+  # Airbyte Worker
+  airbyte-worker:
+    image: airbyte/worker:latest
+    environment:
+      - AIRBYTE_VERSION=dev
+      - AIRBYTE_ROLE=worker
+      - WORKSPACE_ROOT=/tmp/workspace
+      - WORKSPACE_DOCKER_MOUNT=airbyte_workspace
+      - LOCAL_ROOT=/tmp/airbyte_local
+      - LOCAL_DOCKER_MOUNT=airbyte_local
+      - CONFIG_ROOT=/data
+      - CONFIG_DOCKER_MOUNT=airbyte_config
+      - INTERNAL_API_HOST=airbyte-server:8001
+    depends_on:
+      - airbyte-server
+    volumes:
+      - airbyte_workspace:/tmp/workspace
+      - airbyte_local:/tmp/airbyte_local
+      - airbyte_config:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - data-network
+
+  # Airflow Webserver
+  airflow-webserver:
+    image: apache/airflow:2.5.0
+    command: webserver
+    ports:
+      - "8080:8080"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=${FERNET_KEY}
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=true
+      - AIRFLOW__WEBSERVER__RBAC=false
+      - AIRFLOW__CORE__DEFAULT_TIMEZONE=America/Sao_Paulo
+      - AIRFLOW__WEBSERVER__DEFAULT_UI_TIMEZONE=America/Sao_Paulo
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./config/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+    networks:
+      - data-network
+
+  # Airflow Scheduler
+  airflow-scheduler:
+    image: apache/airflow:2.5.0
+    command: scheduler
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=${FERNET_KEY}
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__CORE__DEFAULT_TIMEZONE=America/Sao_Paulo
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./config/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+    networks:
+      - data-network
+
+  # Airflow Worker
+  airflow-worker:
+    image: apache/airflow:2.5.0
+    command: celery worker
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=${FERNET_KEY}
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__CORE__DEFAULT_TIMEZONE=America/Sao_Paulo
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./config/airflow/airflow.cfg:/opt/airflow/airflow.cfg
+    networks:
+      - data-network
+
+  # Flower para monitorar Celery
+  flower:
+    image: apache/airflow:2.5.0
+    command: celery flower
+    ports:
+      - "5555:5555"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=${FERNET_KEY}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - data-network
+
+  # Grafana para monitoramento
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - data-network
+
+  # Prometheus para métricas
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - data-network
+
+  # Jupyter Notebook para análises
+  jupyter:
+    image: jupyter/datascience-notebook:latest
+    ports:
+      - "8888:8888"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=token
+    volumes:
+      - ./notebooks:/home/jovyan/work
+    networks:
+      - data-network
+
+volumes:
+  postgres_data:
+  airbyte_db_data:
+  airbyte_workspace:
+  airbyte_local:
+  airbyte_config:
+  grafana_data:
+  prometheus_data:
+
+networks:
+  data-network:
+    driver: bridge

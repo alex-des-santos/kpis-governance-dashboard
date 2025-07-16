@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Executivo - KPIs Estratégicos</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1>🚀 Dashboard Executivo</h1>
+                <div class="header-info">
+                    <span class="last-update">Última atualização: <span id="last-update">16/07/2025 08:00</span></span>
+                    <span class="disclaimer">📊 Dados simulados para demonstração</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Filtros -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <label for="period-filter">Período:</label>
+                <select id="period-filter">
+                    <option value="7d">Últimos 7 dias</option>
+                    <option value="30d" selected>Últimos 30 dias</option>
+                    <option value="90d">Últimos 90 dias</option>
+                    <option value="12m">Últimos 12 meses</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="channel-filter">Canal:</label>
+                <select id="channel-filter">
+                    <option value="all" selected>Todos os canais</option>
+                    <option value="ads">Ads</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="site">Site</option>
+                    <option value="sdr">SDR</option>
+                    <option value="events">Feiras/Eventos</option>
+                    <option value="referrals">Indicações</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="segment-filter">Segmento:</label>
+                <select id="segment-filter">
+                    <option value="all" selected>Todos os segmentos</option>
+                    <option value="enterprise">Enterprise</option>
+                    <option value="mid-market">Mid-Market</option>
+                    <option value="smb">SMB</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- KPIs Cards -->
+        <div class="kpis-grid">
+            <!-- Comercial -->
+            <div class="kpi-section">
+                <h2>💼 Comercial</h2>
+                <div class="kpi-cards">
+                    <div class="kpi-card" data-status="good">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Taxa de Conversão</span>
+                            <span class="kpi-trend up">↗</span>
+                        </div>
+                        <div class="kpi-value">
+                            <span class="value">12.5%</span>
+                            <span class="target">Meta: 15%</span>
+                        </div>
+                        <div class="kpi-sparkline">
+                            <canvas id="conversion-sparkline"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card" data-status="warning">
+                        <div class="kpi-header">
+                            <span class="kpi-title">CAC</span>
+                            <span class="kpi-trend down">↘</span>
+                        </div>
+                        <div class="kpi-value">
+                            <span class="value">R$ 850</span>
+                            <span class="target">Meta: R$ 500</span>
+                        </div>
+                        <div class="kpi-sparkline">
+                            <canvas id="cac-sparkline"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card" data-status="excellent">
+                        <div class="kpi-header">
+                            <span class="kpi-title">MRR</span>
+                            <span class="kpi-trend up">↗</span>
+                        </div>
+                        <div class="kpi-value">
+                            <span class="value">R$ 285K</span>
+                            <span class="target">Meta: R$ 250K</span>
+                        </div>
+                        <div class="kpi-sparkline">
+                            <canvas id="mrr-sparkline"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operacional -->
+            <div class="kpi-section">
+                <h2>⚙️ Operacional</h2>
+                <div class="kpi-cards">
+                    <div class="kpi-card" data-status="excellent">
+                        <div class="kpi-header">
+                            <span class="kpi-title">SLA WhatsApp</span>
+                            <span class="kpi-trend up">↗</span>
+                        </div>
+                        <div class="kpi-value">
+                            <span class="value">94%</span>
+                            <span class="target">Meta: 90%</span>
+                        </div>
+                        <div class="kpi-sparkline">
+                            <canvas id="sla-sparkline"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card" data-status="good">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Lead Time</span>
+                            <span class="kpi-trend stable">→</span>
+                        </div>
+                        <div class="kpi-value">
+                            <span class="value">7.2 dias</span>
+                            <span class="target">Meta: 5 dias</span>
+                        </div>
+                        <div class="kpi-sparkline">
+                            <canvas id="leadtime-sparkline"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financeiro -->
+            <div class="kpi-section">
+                <h2>💰 Financeiro</h2>
+                <div class="kpi-cards">
+                    <div class="kpi-card" data-status="excellent">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Margem Bruta</span>
+                            <span class="kpi-trend up">↗</span>
+                        </div>
+                        <div class="kpi-value">
+                            <span class="value">68%</span>
+                            <span class="target">Meta: 60%</span>
+                        </div>
+                        <div class="kpi-sparkline">
+                            <canvas id="margin-sparkline"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card" data-status="good">
+                        <div class="kpi-header">
+                            <span class="kpi-title">ROI Eventos</span>
+                            <span class="kpi-trend up">↗</span>
+                        </div>
+                        <div class="kpi-value">
+                            <span class="value">245%</span>
+                            <span class="target">Meta: 300%</span>
+                        </div>
+                        <div class="kpi-sparkline">
+                            <canvas id="roi-sparkline"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3>📈 Funil de Vendas</h3>
+                    <div class="chart-period">Últimos 30 dias</div>
+                </div>
+                <canvas id="sales-funnel"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3>🎯 Origem dos Leads</h3>
+                    <div class="chart-period">Últimos 30 dias</div>
+                </div>
+                <canvas id="leads-source"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3>📊 Evolução do MRR</h3>
+                    <div class="chart-period">Últimos 12 meses</div>
+                </div>
+                <canvas id="mrr-evolution"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3>⏱️ Tempo de Resposta WhatsApp</h3>
+                    <div class="chart-period">Últimos 7 dias</div>
+                </div>
+                <canvas id="response-time"></canvas>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div class="alerts-section">
+            <h3>🚨 Alertas e Notificações</h3>
+            <div class="alerts-container">
+                <div class="alert warning">
+                    <span class="alert-icon">⚠️</span>
+                    <div class="alert-content">
+                        <strong>CAC acima da meta</strong>
+                        <p>Custo de aquisição de cliente está 70% acima da meta estabelecida</p>
+                        <small>Há 2 horas</small>
+                    </div>
+                </div>
+                <div class="alert info">
+                    <span class="alert-icon">ℹ️</span>
+                    <div class="alert-content">
+                        <strong>MRR bate recorde</strong>
+                        <p>Receita recorrente mensal alcançou R$ 285K, superando meta em 14%</p>
+                        <small>Há 6 horas</small>
+                    </div>
+                </div>
+                <div class="alert success">
+                    <span class="alert-icon">✅</span>
+                    <div class="alert-content">
+                        <strong>SLA WhatsApp excelente</strong>
+                        <p>94% das mensagens respondidas dentro do prazo estabelecido</p>
+                        <small>Há 1 dia</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>📊 Dados e Fontes</h4>
+                    <ul>
+                        <li>CRM Ploomes</li>
+                        <li>ERP SAP B1</li>
+                        <li>WhatsApp Business API</li>
+                        <li>Plataformas de Ads</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>🔧 Tecnologias</h4>
+                    <ul>
+                        <li>Apache Airflow</li>
+                        <li>dbt Core</li>
+                        <li>Great Expectations</li>
+                        <li>Snowflake</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>📈 Governança</h4>
+                    <ul>
+                        <li>Atualização em tempo real</li>
+                        <li>Qualidade validada</li>
+                        <li>Linhagem rastreável</li>
+                        <li>Auditoria completa</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-disclaimer">
+                <p><strong>⚠️ Aviso:</strong> Este dashboard utiliza dados simulados para fins de demonstração. 
+                Em um ambiente de produção, os dados seriam provenientes das fontes reais integradas.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="mockdata.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

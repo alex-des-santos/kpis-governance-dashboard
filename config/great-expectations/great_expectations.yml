@@ -1,0 +1,148 @@
+# Configuração do Great Expectations
+# config/great-expectations/great_expectations.yml
+
+# Versão do Great Expectations
+config_version: 3.0
+
+# Configurações do contexto de dados
+datasources:
+  snowflake_datasource:
+    name: snowflake_datasource
+    class_name: Datasource
+    module_name: great_expectations.datasource
+    execution_engine:
+      module_name: great_expectations.execution_engine
+      class_name: SqlAlchemyExecutionEngine
+      connection_string: "snowflake://${SNOWFLAKE_USER}:${SNOWFLAKE_PASSWORD}@${SNOWFLAKE_ACCOUNT}/${SNOWFLAKE_DATABASE}/${SNOWFLAKE_SCHEMA}?warehouse=${SNOWFLAKE_WAREHOUSE}&role=${SNOWFLAKE_ROLE}"
+    data_connectors:
+      default_inferred_data_connector:
+        class_name: InferredAssetSqlDataConnector
+        module_name: great_expectations.datasource.data_connector
+        default_regex:
+          group_names:
+            - data_asset_name
+          pattern: (.*)
+        include_schema_name: true
+
+# Configurações do contexto de dados
+data_context_id: "a4b8c7d2-e3f4-5678-9abc-def012345678"
+
+# Configurações de checkpoint
+checkpoint_store_name: checkpoint_store
+
+# Configurações de expectativa
+expectations_store_name: expectations_store
+
+# Configurações de validação
+validations_store_name: validations_store
+
+# Configurações de site de dados
+data_docs_sites:
+  local_site:
+    class_name: SiteBuilder
+    module_name: great_expectations.render.renderer.site_builder
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      module_name: great_expectations.data_context.store
+      base_directory: uncommitted/data_docs/local_site/
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder
+      module_name: great_expectations.render.renderer.site_builder
+      
+  s3_site:
+    class_name: SiteBuilder
+    module_name: great_expectations.render.renderer.site_builder
+    store_backend:
+      class_name: TupleS3StoreBackend
+      module_name: great_expectations.data_context.store
+      bucket: "${DATA_DOCS_BUCKET}"
+      prefix: "data_docs/"
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder
+      module_name: great_expectations.render.renderer.site_builder
+
+# Configurações de armazenamento
+stores:
+  checkpoint_store:
+    class_name: CheckpointStore
+    module_name: great_expectations.data_context.store
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      module_name: great_expectations.data_context.store
+      base_directory: checkpoints/
+      
+  expectations_store:
+    class_name: ExpectationsStore
+    module_name: great_expectations.data_context.store
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      module_name: great_expectations.data_context.store
+      base_directory: expectations/
+      
+  validations_store:
+    class_name: ValidationsStore
+    module_name: great_expectations.data_context.store
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      module_name: great_expectations.data_context.store
+      base_directory: uncommitted/validations/
+      
+  evaluation_parameter_store:
+    class_name: EvaluationParameterStore
+    module_name: great_expectations.data_context.store
+
+# Configurações de profiling
+profilers:
+  default_profiler:
+    class_name: BasicSuiteBuilderProfiler
+    module_name: great_expectations.profile.basic_suite_builder_profiler
+    config:
+      semantic_types:
+        datetime:
+          - timestamp
+          - date
+          - datetime
+        numeric:
+          - integer
+          - float
+          - decimal
+        categorical:
+          - string
+          - boolean
+        text:
+          - text
+          - varchar
+          - char
+
+# Configurações de notificações
+notifications:
+  slack:
+    class_name: SlackNotificationAction
+    module_name: great_expectations.render.renderer.slack_renderer
+    webhook: "${SLACK_WEBHOOK_URL}"
+    notify_on: "failure"
+    
+  email:
+    class_name: EmailAction
+    module_name: great_expectations.render.renderer.email_renderer
+    smtp_address: "${SMTP_ADDRESS}"
+    smtp_port: 587
+    sender_login: "${SENDER_LOGIN}"
+    sender_password: "${SENDER_PASSWORD}"
+    receiver_emails: ["data-team@company.com"]
+    notify_on: "failure"
+
+# Configurações de configuração anônima
+anonymous_usage_statistics:
+  enabled: true
+  data_context_id: "a4b8c7d2-e3f4-5678-9abc-def012345678"
+  usage_statistics_url: "https://stats.greatexpectations.io/great_expectations/v1/usage_statistics"
+
+# Configurações de plugin
+plugins_directory: plugins/
+
+# Configurações de includes
+include_rendered_content:
+  globally: false
+  expectation_validation_result: false
+  expectation_suite: false

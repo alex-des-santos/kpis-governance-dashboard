@@ -1,0 +1,76 @@
+# Configuração do dbt
+# config/dbt/dbt_project.yml
+
+name: 'kpis_dashboard'
+version: '1.0.0'
+config-version: 2
+
+# Configurações do projeto
+profile: 'kpis_dashboard'
+
+# Diretórios
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+# Configurações de output
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Configurações de modelos
+models:
+  kpis_dashboard:
+    # Configurações aplicadas a todos os modelos
+    +materialized: table
+    +on_schema_change: "sync_all_columns"
+    
+    # Staging models
+    staging:
+      +materialized: view
+      +schema: staging
+      
+    # Marts models  
+    marts:
+      +materialized: table
+      +schema: marts
+      
+    # KPIs models
+    kpis:
+      +materialized: table
+      +schema: kpis
+      +pre-hook: 
+        - "{{ log('Starting KPI model: ' ~ this.name, info=true) }}"
+      +post-hook: 
+        - "{{ log('Completed KPI model: ' ~ this.name, info=true) }}"
+
+# Configurações de seeds
+seeds:
+  kpis_dashboard:
+    +schema: seeds
+    +quote_columns: false
+
+# Configurações de snapshots
+snapshots:
+  kpis_dashboard:
+    +target_schema: snapshots
+    +strategy: timestamp
+    +updated_at: updated_at
+
+# Configurações de testes
+tests:
+  kpis_dashboard:
+    +severity: error
+    +store_failures: true
+
+# Configurações de deploy
+dispatch:
+  - macro_namespace: dbt_utils
+    search_order: ['dbt_utils']
+    
+  - macro_namespace: dbt_date
+    search_order: ['dbt_date']
